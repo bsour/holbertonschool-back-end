@@ -1,47 +1,52 @@
 #!/usr/bin/python3
-""" This module make beginner level API calls to a dummy data service"""
+"""
+Gathers data from an API.
+"""
+
 import requests
 import sys
 
-if __name__ == '__main__':
 
-    # ----- Exit script with error message if no arguments given
-    try:
-        if not sys.argv[1]:
-            pass
-    except IndexError:
-        sys.exit("This script requires an argument of employee_id number")
-
-    # ----- Define components of api_url string
-    employee_id = str(sys.argv[1])
+def gather_data(employee_id):
+    """
+    Gathers and displays data from an API for a given employee ID.
+    """
     base_url = "https://jsonplaceholder.typicode.com"
-    s = "/"
-    users = "users"
-    todos = "todos"
+    employee_url = f"{base_url}/users/{employee_id}"
+    todo_url = f"{base_url}/todos?userId={employee_id}"
 
-    # ----- Make api call to users with their todos
-    api_url = base_url + s + users + s + employee_id + s + todos
-    response = requests.get(api_url)
-    user_todo_list = response.json()
+    response_employee = requests.get(employee_url)
+    response_todo = requests.get(todo_url)
 
-    # ----- Extract a list of completed tasks from user-todo api call
-    completed_task_list = []
-    for user_todo_dict in user_todo_list:
-        if user_todo_dict.get('completed') is True:
-            completed_task_list.append(user_todo_dict.get('title'))
+    if response_employee.status_code != 200:
+        print("Error fetching employee data.")
+        return
 
-    # ----- Make a second api call for data on the user only
-    api_url = base_url + s + users + s + employee_id
-    response = requests.get(api_url)
-    user_dict = response.json()
+    if response_todo.status_code != 200:
+        print("Error fetching TODO list data.")
+        return
 
-    # ----- Create variables for print display
-    employee_name = user_dict.get('name')
-    no_completed_tasks = len(completed_task_list)
-    no_total_tasks = len(user_todo_list)
+    employee_data = response_employee.json()
+    todo_data = response_todo.json()
 
-    # ----- Display data to standard output
-    print("Employee {} is done with tasks({}/{}):"
-          .format(employee_name, no_completed_tasks, no_total_tasks))
-    for task in completed_task_list:
-        print(f"\t {task}")
+    employee_name = employee_data["name"]
+    total_tasks = len(todo_data)
+    completed_tasks = sum(1 for task in todo_data if task["completed"])
+
+    progress_message = (
+        f"Employee {employee_name} is done with tasks"
+        f"({completed_tasks}/{total_tasks}):"
+    )
+    print(progress_message)
+
+    for task in todo_data:
+        if task["completed"]:
+            print(f"\t{task['title']}")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: ./0-gather_data_from_an_API.py <employee_id>")
+    else:
+        employee_id = int(sys.argv[1])
+        gather_data(employee_id)
