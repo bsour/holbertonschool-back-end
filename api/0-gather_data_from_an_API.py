@@ -1,19 +1,13 @@
 #!/usr/bin/python3
-"""
-Gathers data from an API.
-"""
-
+""" This module make beginner level API calls to a dummy data service"""
 import requests
 import sys
 
 
 def gather_data(employee_id):
-    """
-    Gathers and displays data from an API for a given employee ID.
-    """
     base_url = "https://jsonplaceholder.typicode.com"
     employee_url = f"{base_url}/users/{employee_id}"
-    todo_url = f"{base_url}/todos?userId={employee_id}"
+    todo_url = f"{employee_url}/todos"
 
     response_employee = requests.get(employee_url)
     response_todo = requests.get(todo_url)
@@ -23,18 +17,18 @@ def gather_data(employee_id):
         return
 
     if response_todo.status_code != 200:
-        print("Error fetching TODO list data.")
+        print("Error fetching TODOD list data.")
         return
 
     employee_data = response_employee.json()
     todo_data = response_todo.json()
 
-    employee_name = employee_data["name"]
+    employee_name = employee_data["name"].strip()
     total_tasks = len(todo_data)
     completed_tasks = sum(1 for task in todo_data if task["completed"])
 
-    print(f"Employee {employee_name} is done with tasks"
-          f"({completed_tasks}/{total_tasks}):")
+    print("Employee {} is done with tasks ({}/{}):"
+          .format(employee_name, completed_tasks, total_tasks))
 
     for task in todo_data:
         if task["completed"]:
@@ -42,8 +36,8 @@ def gather_data(employee_id):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: ./0-gather_data_from_an_API.py <employee_id>")
-    else:
-        employee_id = int(sys.argv[1])
-        gather_data(employee_id)
+    try:
+        if not sys.argv[1]:
+            pass
+    except IndexError:
+        sys.exit("This script requires an argument of employee_id number")
