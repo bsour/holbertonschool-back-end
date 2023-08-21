@@ -33,11 +33,8 @@ def gather_data(employee_id):
     total_tasks = len(todo_data)
     completed_tasks = sum(1 for task in todo_data if task["completed"])
 
-    progress_message = (
-        f"Employee {employee_name} is done with tasks"
-        f"({completed_tasks}/{total_tasks}):"
-    )
-    print(progress_message)
+    print(f"Employee {employee_name} is done with tasks"
+          f"({completed_tasks}/{total_tasks}):")
 
     for task in todo_data:
         if task["completed"]:
