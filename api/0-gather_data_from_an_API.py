@@ -1,43 +1,42 @@
 #!/usr/bin/python3
-""" This module make beginner level API calls to a dummy data service"""
+"""This script retrieves and processes data from the JSONPlaceholder API to
+ gather information about an employee's tasks. """
 import requests
 import sys
 
-
-def gather_data(employee_id):
-    base_url = "https://jsonplaceholder.typicode.com"
-    employee_url = f"{base_url}/users/{employee_id}"
-    todo_url = f"{employee_url}/todos"
-
-    response_employee = requests.get(employee_url)
-    response_todo = requests.get(todo_url)
-
-    if response_employee.status_code != 200:
-        print("Error fetching employee data.")
-        return
-
-    if response_todo.status_code != 200:
-        print("Error fetching TODOD list data.")
-        return
-
-    employee_data = response_employee.json()
-    todo_data = response_todo.json()
-
-    employee_name = employee_data["name"].strip()
-    total_tasks = len(todo_data)
-    completed_tasks = sum(1 for task in todo_data if task["completed"])
-
-    print("Employee {} is done with tasks ({}/{}):"
-          .format(employee_name, completed_tasks, total_tasks))
-
-    for task in todo_data:
-        if task["completed"]:
-            print(f"\t{task['title']}")
-
-
 if __name__ == "__main__":
-    try:
-        if not sys.argv[1]:
-            pass
-    except IndexError:
-        sys.exit("This script requires an argument of employee_id number")
+    if len(sys.argv) != 2:
+        print("Usage: python script_name.py <integer>")
+        sys.exit(1)
+
+    # URL builder
+    base = "https://jsonplaceholder.typicode.com"
+    users = "users"
+    employee_id = str(sys.argv[1])
+    api_url = base + "/" + users + "/" + employee_id
+    response = requests.get(api_url)
+
+    # employee name
+    employee_info = response.json()
+    EMPLOYEE_NAME = employee_info.get('name')
+
+    # number of tasks for employee
+    todo = "todos"
+    task_per_user_url = api_url + "/" + todo
+    response = requests.get(task_per_user_url)
+    list_of_todos = response.json()
+    TOTAL_NUMBER_OF_TASKS = len(list_of_todos)
+
+    # number of tasks completed for employee
+    completed_tasks = []
+    for todo in list_of_todos:
+        if todo.get('completed') is True:
+            completed_tasks.append(todo)
+    NUMBER_OF_DONE_TASKS = len(completed_tasks)
+
+    print(f"Employee {EMPLOYEE_NAME} is done with tasks({NUMBER_OF_DONE_TASKS}\
+/{TOTAL_NUMBER_OF_TASKS}):")
+
+    for task in completed_tasks:
+        task_name = task.get('title')
+        print(f"\t {task_name}")
