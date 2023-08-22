@@ -1,9 +1,8 @@
 #!/usr/bin/python3
-"""This script retrieves and processes data from the JSONPlaceholder API to
-gather information about an employee's tasks and exports it in CSV format. """
+"""export data from api to CSV file """
+import csv
 import requests
 import sys
-import csv
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -13,35 +12,51 @@ if __name__ == "__main__":
     # URL builder
     base = "https://jsonplaceholder.typicode.com"
     users = "users"
-    employee_id = str(sys.argv[1])
-    api_url = base + "/" + users + "/" + employee_id
-    response = requests.get(api_url)
+    users_url = base + "/" + users
+    response = requests.get(users_url)
+    employee_info = response.json()
+
+    # specific employee info
+    input_id = str(sys.argv[1])
+    id_url = base + "/" + users + "/" + input_id
+    response = requests.get(id_url)
+    employee_info = response.json()
 
     # employee name
-    employee_info = response.json()
-    EMPLOYEE_ID = employee_info.get('id')
-    EMPLOYEE_USERNAME = employee_info.get('username')
+    EMPLOYEE_NAME = employee_info.get('name')
+
+    # employee username
+    USERNAME = employee_info.get('username')
 
     # number of tasks for employee
     todo = "todos"
-    task_per_user_url = api_url + "/" + todo
+    task_per_user_url = id_url + "/" + todo
     response = requests.get(task_per_user_url)
     list_of_todos = response.json()
+    TOTAL_NUMBER_OF_TASKS = len(list_of_todos)
 
-    # Extract task information for CSV export
-    csv_data = []
+    # number of tasks completed for employee
+    completed_tasks = []
+    for todo in list_of_todos:
+        if todo.get('completed') is True:
+            completed_tasks.append(todo)
+    NUMBER_OF_DONE_TASKS = len(completed_tasks)
+
+    # export data of tasks for user_id in CSV format
+    task_list = []
     for task in list_of_todos:
-        task_completed_status = task.get('completed')
-        task_title = task.get('title')
-        csv_data.append([EMPLOYEE_ID, EMPLOYEE_USERNAME,
-                         str(task_completed_status), task_title])
+        task_info = {
+            'USER_ID': str(input_id),
+            'USERNAME': USERNAME,
+            'TASK_COMPLETED_STATUS': task.get('completed'),
+            'TASK_TITLE': task.get('title')
+            }
+        task_list.append(task_info)
 
-    # Export data to CSV file
-    csv_file_name = f"{EMPLOYEE_ID}.csv"
-    with open(csv_file_name, 'w', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(["USER_ID", "USERNAME",
-                             "TASK_COMPLETED_STATUS", "TASK_TITLE"])
-        csv_writer.writerows(csv_data)
-
-    print(f"CSV file '{csv_file_name}' has been created.")
+    filename = input_id + ".csv"
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ["USER_ID", "USERNAME", "TASK_COMPLETED_STATUS",
+                      "TASK_TITLE"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quotechar='"',
+                                quoting=csv.QUOTE_ALL)
+        writer.writerows(task_list)
