@@ -46,11 +46,14 @@ if __name__ == "__main__":
         }
         task_json_data.append(task_info)
 
-    # Export data to JSON
-    filename_json = input_id + ".json"
-    with open(filename_json, 'w') as jsonfile:
-        json.dump({
-            "USER_ID": input_id,
-            "NUMBER_OF_DONE_TASKS": NUMBER_OF_DONE_TASKS,
-            "tasks": task_json_data
-        }, jsonfile, indent=4)
+    # Prepare a dictionary with user ID as the key and task list as the value
+    USER_ID = str(input_id)
+    json_dict = {USER_ID: task_json_data}
+
+    # Print the dictionary
+    print(json_dict)
+
+    # Write the dictionary to a JSON file
+    filename = input_id + ".json"
+    with open(filename, 'w') as write_file:
+        json.dump(json_dict, write_file)
